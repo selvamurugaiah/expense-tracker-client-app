@@ -5,7 +5,6 @@ import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
 import 'chart.js/auto';
 
-
 const Dashboard = () => {
   const [incomeList, setIncomeList] = useState([]);
   const [expenseList, setExpenseList] = useState([]);
@@ -15,47 +14,56 @@ const Dashboard = () => {
 
   const user = useSelector((state) => state.users.users);
 
-  const userInfoString = localStorage.getItem("userInfo");
+  const userInfoString = localStorage.getItem('userInfo');
   const userId = userInfoString ? JSON.parse(userInfoString).userId : null;
   const token = userInfoString ? JSON.parse(userInfoString).token : null;
 
+  // Add state to track whether the user is logged in
+  const [isLoggedIn, setIsLoggedIn] = useState(!!token);
+
   useEffect(() => {
-    const fetchIncomeList = async () => {
-      try {
-        const response = await axios.get(
-          `https://expense-tracker-app-9kz8.onrender.com/income/get-incomes?page=1&userId=${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+    if (userId && token) {
+      setIsLoggedIn(true);
+      
+      const fetchIncomeList = async () => {
+        try {
+          const response = await axios.get(
+            `https://expense-tracker-app-9kz8.onrender.com/income/get-incomes?page=1&userId=${userId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
 
-        setIncomeList(response.data.docs);
-      } catch (error) {
-        console.error('Error fetching income data:', error.message);
-      }
-    };
+          setIncomeList(response.data.docs);
+        } catch (error) {
+          console.error('Error fetching income data:', error.message);
+        }
+      };
 
-    const fetchExpenseList = async () => {
-      try {
-        const response = await axios.get(
-          `https://expense-tracker-app-9kz8.onrender.com/expense/get-expense?page=1&userId=${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+      const fetchExpenseList = async () => {
+        try {
+          const response = await axios.get(
+            `https://expense-tracker-app-9kz8.onrender.com/expense/get-expense?page=1&userId=${userId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
 
-        setExpenseList(response.data.docs);
-      } catch (error) {
-        console.error('Error fetching expense data:', error.message);
-      }
-    };
+          setExpenseList(response.data.docs);
+        } catch (error) {
+          console.error('Error fetching expense data:', error.message);
+        }
+      };
 
-    fetchIncomeList();
-    fetchExpenseList();
+      fetchIncomeList();
+      fetchExpenseList();
+    } else {
+      setIsLoggedIn(false);
+    }
   }, [userId, token]);
 
   useEffect(() => {
@@ -99,40 +107,48 @@ const Dashboard = () => {
 
   return (
     <Container>
-      <Row className="mt-5">
-        <Col>
-          <h2>Welcome, {user.username}</h2>
-          <p>Email: {user.email}</p>
-        </Col>
-      </Row>
+      {isLoggedIn ? (
+        <>
+          <Row className="mt-5">
+            <Col>
+              <h2>Welcome, {user.username}</h2>
+              <p>Email: {user.email}</p>
+            </Col>
+          </Row>
 
-      <Row className="mt-5">
-        <Col>
-       
-          <Bar data={chartData} options={chartOptions}  />
-        </Col>
-      </Row>
+          <Row className="mt-5">
+            <Col>
+              <Bar data={chartData} options={chartOptions} />
+            </Col>
+          </Row>
 
-      <Row className="mt-5">
-        <Col>
-        <Card>
-            <Card.Body>
-              <Card.Title>Financial Overview</Card.Title>
-              <Card.Text>
-                <p style={{ color: 'green' }}>Total Income: ${totalIncome}</p>
-                <p style={{ color: 'red' }}>Total Expense: ${totalExpense}</p>
-                <h3 style={{ color: 'blue' }}>Remaining Amount: ${remainingAmount}</h3>
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+          <Row className="mt-5">
+            <Col>
+              <Card>
+                <Card.Body>
+                  <Card.Title>Financial Overview</Card.Title>
+                  <Card.Text>
+                    <p style={{ color: 'green' }}>Total Income: ${totalIncome}</p>
+                    <p style={{ color: 'red' }}>Total Expense: ${totalExpense}</p>
+                    <h3 style={{ color: 'blue' }}>Remaining Amount: ${remainingAmount}</h3>
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </>
+      ) : (
+        <Row className="mt-5">
+          <Col>
+            <p>Please log in to access the dashboard.</p>
+          </Col>
+        </Row>
+      )}
     </Container>
   );
 };
 
 export default Dashboard;
-
 
 
 
